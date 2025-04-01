@@ -11,35 +11,37 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import prisma from "../../lib/prisma";
 
-export default function Movies({ initialMovies }) {
+export default function Movies({ movies }) {
   const [searchTerm, setSearchTerm] = useState("");
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "ADMIN";
 
-  // Filter movies based on search term
+  // Filter movies based on search term; if searchTerm is empty, return all movies.
   const filteredMovies =
     searchTerm.trim() === ""
-      ? initialMovies // Show all movies when search is empty
-      : initialMovies.filter(
-          (movie) =>
-            movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            movie.actors.some((actor) =>
-              actor.toLowerCase().includes(searchTerm.toLowerCase())
-            ) ||
-            movie.releaseYear.toString().includes(searchTerm)
-        );
+      ? movies
+      : movies.filter((movie) => {
+          const term = searchTerm.toLowerCase();
+          // Check if title, any actor, or releaseYear match the search term
+          return (
+            movie.title.toLowerCase().includes(term) ||
+            (movie.actors && movie.actors.some((actor) => actor.toLowerCase().includes(term))) ||
+            movie.releaseYear.toString().includes(term)
+          );
+        });
+
+  // (Optional) For debugging, you could log the movies data in the browser console:
+  // console.log("Movies from server:", movies);
 
   return (
     <>
       <Head>
-        <title>Movies - IMR Portal</title>
+        <title>Movies Collection</title>
         <meta name="description" content="Browse our movie collection" />
       </Head>
-
       <div className="py-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <h1 className="text-3xl font-bold mb-4 md:mb-0">Movies Collection</h1>
-
           {isAdmin && (
             <Link href="/movies/add">
               <span className="inline-block bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 cursor-pointer">
@@ -60,12 +62,10 @@ export default function Movies({ initialMovies }) {
         </div>
 
         {filteredMovies.length > 0 ? (
-          <MovieList initialMovies={filteredMovies} />
+          <MovieList movies={filteredMovies} />
         ) : (
           <div className="text-center py-10">
-            <h2 className="text-2xl font-bold text-gray-700 mb-2">
-              No movies found
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-700 mb-2">No movies found</h2>
             <p className="text-gray-600">Try adjusting your search criteria.</p>
           </div>
         )}
@@ -73,25 +73,25 @@ export default function Movies({ initialMovies }) {
     </>
   );
 }
+
 export async function getServerSideProps() {
   try {
     const movies = await prisma.movie.findMany({
-      orderBy: {
-        title: "asc",
-      },
+      orderBy: { title: "asc" },
     });
-
+    console.log("Fetched movies:", movies); // This should log to your terminal
     return {
       props: {
-        initialMovies: JSON.parse(JSON.stringify(movies)),
+        movies: JSON.parse(JSON.stringify(movies)),
       },
     };
   } catch (error) {
     console.error("Error fetching movies:", error);
     return {
       props: {
-        initialMovies: [],
+        movies: [],
       },
     };
   }
 }
+
