@@ -148,6 +148,42 @@ model Movie {
 }
 ```
 
+## Creating Admin Users
+
+All users who sign up through the application are assigned the `"USER"` role. To change a
+user to an admin, you'll need to manually update their role in the database.
+
+### Option 1: Using MongoDB Compass or Mongo Shell
+
+Open your MongoDB database in MongoDB Compass or connect with Mongo Shell.
+
+Find the user document you want to promote:
+
+```
+db.User.find({ email: "user@example.com" })
+```
+
+Update the user's role to `"ADMIN"`:
+
+```
+db.User.updateOne(
+{ email: "user@example.com" },
+{ $set: { role: "ADMIN" } }
+)
+```
+
+### Option 2: Using Prisma Studio
+
+1. Run the following command to open Prisma Studio:
+
+```
+npx prisma studio
+```
+
+2. Navigate to the **User** model.
+3. Find the user you want to promote.
+4. Change the `role` field to `"ADMIN"` and save the changes.
+
 ## Deployment
 
 The application can be deployed to platforms like Vercel, Netlify, or a custom server. Make sure to set up the required environment variables in your deployment platform.
