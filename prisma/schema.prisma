@@ -22,10 +22,7 @@ model Movie {
   title       String
   actors      String[] @map("cast")
   releaseYear Int      @map("year")
-  // If your documents don't include these fields, you can make them optional
-  createdAt   DateTime? @default(now())
-  updatedAt   DateTime? @updatedAt
-
+  
   @@map("movies") 
 }
 
