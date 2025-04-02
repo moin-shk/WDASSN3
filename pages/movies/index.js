@@ -1,9 +1,4 @@
-/**
- * Movies List Page
- *
- * This page displays a list of all movies in the database.
- * It fetches movie data from the API and renders the MovieList component.
- */
+import 'dotenv/config'; // Ensure environment variables are loaded
 import Head from "next/head";
 import { useState } from "react";
 import MovieList from "../../components/movies/MovieList";
@@ -16,22 +11,17 @@ export default function Movies({ movies }) {
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "ADMIN";
 
-  // Filter movies based on search term; if searchTerm is empty, return all movies.
   const filteredMovies =
     searchTerm.trim() === ""
       ? movies
       : movies.filter((movie) => {
           const term = searchTerm.toLowerCase();
-          // Check if title, any actor, or releaseYear match the search term
           return (
             movie.title.toLowerCase().includes(term) ||
             (movie.actors && movie.actors.some((actor) => actor.toLowerCase().includes(term))) ||
             movie.releaseYear.toString().includes(term)
           );
         });
-
-  // (Optional) For debugging, you could log the movies data in the browser console:
-  // console.log("Movies from server:", movies);
 
   return (
     <>
@@ -50,7 +40,6 @@ export default function Movies({ movies }) {
             </Link>
           )}
         </div>
-
         <div className="mb-6">
           <input
             type="text"
@@ -60,7 +49,6 @@ export default function Movies({ movies }) {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-
         {filteredMovies.length > 0 ? (
           <MovieList movies={filteredMovies} />
         ) : (
@@ -75,23 +63,18 @@ export default function Movies({ movies }) {
 }
 
 export async function getServerSideProps() {
+  console.log("DATABASE_URL in getServerSideProps:", process.env.DATABASE_URL);
   try {
     const movies = await prisma.movie.findMany({
       orderBy: { title: "asc" },
     });
-    console.log("Fetched movies:", movies); // This should log to your terminal
+    console.log("Fetched movies count:", movies.length);
     return {
-      props: {
-        movies: JSON.parse(JSON.stringify(movies)),
-      },
+      props: { movies: JSON.parse(JSON.stringify(movies)) },
     };
   } catch (error) {
     console.error("Error fetching movies:", error);
-    return {
-      props: {
-        movies: [],
-      },
-    };
+    return { props: { movies: [] } };
   }
 }
 
